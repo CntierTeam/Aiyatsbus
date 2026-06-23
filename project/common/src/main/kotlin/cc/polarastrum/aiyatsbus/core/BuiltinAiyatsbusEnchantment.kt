@@ -1,26 +1,16 @@
 package cc.polarastrum.aiyatsbus.core
 
-import cc.polarastrum.aiyatsbus.core.data.*
-import cc.polarastrum.aiyatsbus.core.data.trigger.Mechanism
+import cc.polarastrum.aiyatsbus.core.data.AlternativeData
+import cc.polarastrum.aiyatsbus.core.data.BasicData
+import cc.polarastrum.aiyatsbus.core.data.Displayer
+import cc.polarastrum.aiyatsbus.core.data.LimitType
+import cc.polarastrum.aiyatsbus.core.data.VariableType
 import cc.polarastrum.aiyatsbus.core.data.trigger.TriggerType
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.EventFunctions
 import taboolib.module.configuration.Configuration
 
-/**
- * 硬编码附魔，
- * 不会被当作 Aiyatsbus 内部附魔，而是外部附魔
- *
- * @author mical
- * @since 2026/3/5 22:04
- */
-class BuiltinAiyatsbusEnchantment(
-    id: String,
-    config: Configuration,
-    eventExecutor: EventFunctions
-) : AiyatsbusEnchantmentBase(id, null, config), EventFunctions by eventExecutor {
-
-    override val mechanism: Mechanism = Mechanism(null, this)
+interface BuiltinAiyatsbusEnchantment : AiyatsbusEnchantment {
 
     class Builder {
 
@@ -90,7 +80,7 @@ class BuiltinAiyatsbusEnchantment(
             return this
         }
 
-        fun addVariable (type: VariableType, name: String, value: String, unit: String = ""): Builder {
+        fun addVariable(type: VariableType, name: String, value: String, unit: String = ""): Builder {
             val map = this.variables.getOrPut(type) { mutableMapOf() }
             map[name] = "$unit:$value"
             return this
@@ -112,8 +102,8 @@ class BuiltinAiyatsbusEnchantment(
             return this
         }
 
-        fun build(): BuiltinAiyatsbusEnchantment {
-            val config = Configuration.Companion.empty()
+        fun build(): BuiltinAiyatsbusEnchantmentBase {
+            val config = Configuration.empty()
             config["basic"] = basicData!!.serialize()
             if (alternativeData != null) {
                 config["alternative"] = alternativeData!!.serialize()
@@ -127,19 +117,15 @@ class BuiltinAiyatsbusEnchantment(
                     config["variables.${type.name.lowercase()}.${name}"] = value
                 }
             }
-            return BuiltinAiyatsbusEnchantment(basicData!!.id, config, eventExecutor).apply {
-                mechanism.addTrigger(TriggerType.BUILTIN, object : Builtin(), EventFunctions by eventExecutor { })
+            return BuiltinAiyatsbusEnchantmentBase(basicData!!.id, config, eventExecutor).apply {
+                mechanism.addTrigger(TriggerType.BUILTIN, object : Builtin(), EventFunctions by eventExecutor {})
             }
         }
 
-        /**
-         * 生成并注册
-         */
-        fun register(): BuiltinAiyatsbusEnchantment {
+        fun register(): BuiltinAiyatsbusEnchantmentBase {
             return build().also { Aiyatsbus.api().getEnchantmentManager().register(it) }
         }
     }
-
 
     companion object {
 

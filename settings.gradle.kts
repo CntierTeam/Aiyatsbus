@@ -1,6 +1,7 @@
 rootProject.name = "Aiyatsbus"
 
 include(
+    "addon-nereus-opus",
     "plugin",
     // 接口
     "project:common",
@@ -39,4 +40,5 @@ include(
     "project:module-script:script-fluxon",
     // Kether 脚本实现
 //    "project:module-script:script-kether",
+    "module"
 )

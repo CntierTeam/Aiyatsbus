@@ -7,11 +7,14 @@ import org.bukkit.block.Block
 import org.bukkit.metadata.Metadatable
 import org.bukkit.persistence.PersistentDataHolder
 import org.bukkit.persistence.PersistentDataType
+import taboolib.library.xseries.particles.XParticle
 import taboolib.platform.util.bukkitPlugin
 import taboolib.platform.util.removeMeta
 import taboolib.platform.util.setMeta
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * 世界工具类
@@ -236,3 +239,41 @@ fun Metadatable.unmark(key: String) {
  * ```
  */
 val Location.serialized get() = "${world.name},$blockX,$blockY,$blockZ"
+
+fun <T> spawnSimpleParticle(particle: XParticle, loc: Location, amount: Int, option: T) {
+    loc.world?.spawnParticle(particle.get() ?: return, loc, amount, option)
+}
+
+fun <T> spawnCircleParticles(particle: XParticle, loc: Location, amount: Int, option: T, range: Double, factor: Int = 10) {
+    for (i in 0 until factor) {
+        val angle = 360.0 * i / factor
+        val rad = Math.toRadians(angle)
+        val x = range * sin(rad)
+        val z = range * cos(rad)
+        spawnSimpleParticle(particle, loc.clone().add(x, 0.0, z), amount, option)
+    }
+}
+
+fun <T> spawnRNAParticles(
+    particle: XParticle,
+    loc: Location,
+    amount: Int,
+    option: T,
+    height: Double,
+    range: Double,
+    factor: Int = 10,
+    circle: Int = 1
+) {
+    val totalSteps = factor * circle
+    val angleStep = 360.0 / factor
+    val heightStep = 2.0 * height / totalSteps
+
+    for (step in 0..totalSteps) {
+        val currentAngle = angleStep * step
+        val currentHeight = -height + (heightStep * step)
+        val rad = Math.toRadians(currentAngle)
+        val x = sin(rad) * range
+        val z = cos(rad) * range
+        spawnSimpleParticle(particle, loc.clone().add(x, currentHeight, z), amount, option)
+    }
+}

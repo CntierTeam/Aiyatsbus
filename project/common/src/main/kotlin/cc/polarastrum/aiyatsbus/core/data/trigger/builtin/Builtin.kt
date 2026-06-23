@@ -22,6 +22,7 @@ import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
 import taboolib.common.platform.function.submit
 import taboolib.common5.Baffle
+import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.configuration.Configuration
 import taboolib.platform.util.onlinePlayers
 import taboolib.platform.util.submit
@@ -35,7 +36,14 @@ import java.util.concurrent.TimeUnit
  * @author mical
  * @since 2026/3/8 23:59
  */
-open class Builtin : Trigger(Configuration.empty(), null, ScriptType.FLUXON, "", 0, TriggerType.BUILTIN), EventFunctions {
+open class Builtin : Trigger, EventFunctions {
+
+    constructor() : super(Configuration.empty(), null, ScriptType.FLUXON, "", 0, TriggerType.BUILTIN)
+
+    constructor(enchant: AiyatsbusEnchantment) : this(enchant, Configuration.empty(), TriggerType.BUILTIN)
+
+    constructor(enchant: AiyatsbusEnchantment, section: ConfigurationSection, type: TriggerType = TriggerType.BUILTIN) :
+            super(section, enchant, ScriptType.FLUXON, "", 0, type)
 
     fun call(level: Int, type: EventType, entity: LivingEntity, event: Event) {
         executors[type]?.invoke(this, level, event)

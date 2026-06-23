@@ -26,7 +26,11 @@ class DefaultAiyatsbusMinecraftAPI : AiyatsbusMinecraftAPI {
 
     /** 物品操作接口 */
     val nmsItemOperator by lazy {
-        proxy<MinecraftItemOperator>("$group.nms.DefaultMinecraftItemOperator")
+        if (versionId >= 12005) {
+            proxy<MinecraftItemOperator>("$group.nmsj21.DefaultMinecraftItemOperator")
+        } else {
+            proxy<MinecraftItemOperator>("$group.nms.DefaultMinecraftItemOperator")
+        }
     }
 
     /** 数据包控制接口 */

@@ -36,16 +36,21 @@ repositories {
 }
 
 tasks {
+    val aiyatsbusProjects = rootProject.subprojects.filter {
+        it.path != project.path && it.path != ":addon-nereus-opus"
+    }
+
     jar {
         // 构件名
         archiveBaseName.set(rootProject.name)
         // 打包子项目源代码
-        rootProject.subprojects.forEach { from(it.sourceSets["main"].output) }
+        aiyatsbusProjects.forEach { from(it.sourceSets["main"].output) }
+        from(layout.projectDirectory.dir("src/dev6-classes"))
     }
     sourcesJar {
         // 构件名
         archiveBaseName.set(rootProject.name)
         // 打包子项目源代码
-        rootProject.subprojects.forEach { from(it.sourceSets["main"].allSource) }
+        aiyatsbusProjects.forEach { from(it.sourceSets["main"].allSource) }
     }
 }

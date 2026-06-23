@@ -1,6 +1,7 @@
 package cc.polarastrum.aiyatsbus.core.data.trigger
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.core.data.trigger.artifact.Artifact
 import cc.polarastrum.aiyatsbus.core.data.trigger.builtin.Builtin
 import cc.polarastrum.aiyatsbus.core.data.trigger.event.EventExecutor
 import cc.polarastrum.aiyatsbus.core.data.trigger.skill.Skill
@@ -64,14 +65,17 @@ data class Mechanism(
         }
         // 初始化内置触发器
         section?.getString("builtin")?.let { builtinClass ->
-            val builtin = Class.forName(builtinClass).invokeConstructor() as Builtin
+            val builtin = Class.forName(builtinClass).invokeConstructor(enchant) as Builtin
             addTrigger(TriggerType.BUILTIN, builtin)
+        }
+        section?.getConfigurationSection("artifact")?.let { artifactSection ->
+            addTrigger(TriggerType.ARTIFACT, Artifact(artifactSection, enchant))
         }
     }
 
     fun addTrigger(type: TriggerType, trigger: Trigger) {
-        if (type == TriggerType.BUILTIN) {
-            val entry = registeredTriggers.entries.firstOrNull { it.value == TriggerType.BUILTIN }
+        if (type.isUnique) {
+            val entry = registeredTriggers.entries.firstOrNull { it.value == type }
             if (entry != null) {
                 registeredTriggers.remove(entry.key, entry.value)
             }

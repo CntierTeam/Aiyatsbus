@@ -34,6 +34,7 @@ val reloadSubCommand = subCommand {
         Reloadables.execute()
         ResettableLazy.reset()
         (Aiyatsbus.api().getEnchantmentRegisterer() as? ModernEnchantmentRegisterer)?.freezeRegistry()
+        Aiyatsbus.api().getArtifactHandler().getSettings().conf.reload()
         Aiyatsbus.api().getDisplayManager().getSettings().conf.reload()
         Aiyatsbus.api().getSkillHandler().getSettings().conf.reload()
         AnvilSupport.conf.reload()

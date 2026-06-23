@@ -37,7 +37,7 @@ import org.bukkit.inventory.ItemStack
  * @author mical
  * @since 2024/2/17 17:15
  */
-class AiyatsbusCraftEnchantment(
+open class AiyatsbusCraftEnchantment(
     private val enchant: AiyatsbusEnchantmentBase,
     nmsEnchantment: Enchantment
 ) : CraftEnchantment(enchant.enchantmentKey, nmsEnchantment), AiyatsbusEnchantment by enchant {

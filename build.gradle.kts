@@ -11,6 +11,10 @@ plugins {
 }
 
 subprojects {
+    if (path == ":addon-nereus-opus") {
+        return@subprojects
+    }
+
     apply(plugin = "java")
     apply(plugin = "io.izzel.taboolib")
     apply(plugin = "org.jetbrains.kotlin.jvm")

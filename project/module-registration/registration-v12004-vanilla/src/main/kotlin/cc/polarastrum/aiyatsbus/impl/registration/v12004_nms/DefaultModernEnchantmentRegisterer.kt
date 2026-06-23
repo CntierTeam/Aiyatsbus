@@ -1,30 +1,17 @@
-/*
- * This file is part of EcoEnchants, licensed under the GPL-3.0 License.
- *
- *  Copyright (C) 2024 Auxilor
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 package cc.polarastrum.aiyatsbus.impl.registration.v12004_nms
 
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentBase
 import cc.polarastrum.aiyatsbus.core.AiyatsbusEnchantmentManager
+import cc.polarastrum.aiyatsbus.core.BuiltinAiyatsbusEnchantmentBase
+import cc.polarastrum.aiyatsbus.core.InternalAiyatsbusEnchantmentBase
+import cc.polarastrum.aiyatsbus.core.VanillaAiyatsbusEnchantmentBase
 import cc.polarastrum.aiyatsbus.core.registration.modern.ModernEnchantmentRegisterer
 import cc.polarastrum.aiyatsbus.core.util.setStaticFinal
 import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.AiyatsbusCraftEnchantment
-import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.VanillaAiyatsbusEnchantment
+import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.BuiltinAiyatsbusCraftEnchantment
+import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.InternalAiyatsbusCraftEnchantment
+import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.NMSAiyatsbusEnchantment
 import cc.polarastrum.aiyatsbus.impl.registration.v12004_paper.VanillaCraftEnchantment
 import net.minecraft.core.Holder
 import net.minecraft.core.IRegistry
@@ -46,13 +33,6 @@ import taboolib.library.reflex.Reflex.Companion.getProperty
 import java.util.*
 import kotlin.collections.HashMap
 
-/**
- * Aiyatsbus
- * com.mcstarrysky.aiyatsbus.impl.registration.modern.DefaultModernEnchantmentRegisterer
- *
- * @author mical
- * @since 2024/2/17 17:28
- */
 class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
 
     private val frozenField = RegistryMaterials::class.java
@@ -82,8 +62,7 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
         frozenField.set(BuiltInRegistries.ENCHANTMENT, false)
         unregisteredIntrusiveHoldersField.set(
             BuiltInRegistries.ENCHANTMENT,
-            IdentityHashMap<net.minecraft.world.item.enchantment.Enchantment,
-                    Holder.c<net.minecraft.world.item.enchantment.Enchantment>>()
+            IdentityHashMap<net.minecraft.world.item.enchantment.Enchantment, Holder.c<net.minecraft.world.item.enchantment.Enchantment>>()
         )
     }
 
@@ -94,7 +73,6 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
         @Suppress("UNCHECKED_CAST")
         val registry = CraftRegistry(
             Enchantment::class.java as Class<in Enchantment?>,
-            // TabooLib NMSProxy 已知问题: 调用对象中「仅在父类」声明的方法或字段无法被 TabooLib NMSProxy 重定向
             ((server.handle.server as MinecraftServer).registryAccess() as IRegistryCustom).registryOrThrow(Registries.ENCHANTMENT)
         ) { key, registry ->
             val isVanilla = vanillaEnchantments.contains(key)
@@ -104,18 +82,13 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
                 aiyatsbus as Enchantment
             } else if (isVanilla) {
                 CraftEnchantment(key, registry)
-            } else null
+            } else {
+                null
+            }
         }
 
-        // Register to server
         registries[Enchantment::class.java] = registry
-
-        // Register to API
-        org.bukkit.Registry::class.java
-            .getDeclaredField("ENCHANTMENT")
-            .setStaticFinal(registry)
-
-        // Unfreeze NMS registry
+        org.bukkit.Registry::class.java.getDeclaredField("ENCHANTMENT").setStaticFinal(registry)
         unfreezeRegistry()
     }
 
@@ -126,20 +99,26 @@ class DefaultModernEnchantmentRegisterer : ModernEnchantmentRegisterer {
         if (BuiltInRegistries.ENCHANTMENT.containsKey(CraftNamespacedKey.toMinecraft(enchant.enchantmentKey))) {
             val nms = BuiltInRegistries.ENCHANTMENT[CraftNamespacedKey.toMinecraft(enchant.enchantmentKey)]
             if (nms != null) {
-                 return if (enchant.alternativeData.isVanilla) {
-                     VanillaCraftEnchantment(enchant, nms)
-                 } else {
-                     AiyatsbusCraftEnchantment(enchant, nms)
-                 }
+                return if (enchant.alternativeData.isVanilla) {
+                    require(enchant is VanillaAiyatsbusEnchantmentBase) {
+                        "Enchant ${enchant.id} must be an impl of VanillaAiyatsbusEnchantment!"
+                    }
+                    VanillaCraftEnchantment(enchant, nms)
+                } else {
+                    when (enchant) {
+                        is BuiltinAiyatsbusEnchantmentBase -> BuiltinAiyatsbusCraftEnchantment(enchant, nms)
+                        is InternalAiyatsbusEnchantmentBase -> InternalAiyatsbusCraftEnchantment(enchant, nms)
+                        else -> AiyatsbusCraftEnchantment(enchant, nms)
+                    }
+                }
             } else {
                 throw IllegalStateException("Enchantment ${enchant.id} wasn't registered")
             }
         }
-        IRegistry.register(BuiltInRegistries.ENCHANTMENT, enchant.id, VanillaAiyatsbusEnchantment(enchant.id))
+        IRegistry.register(BuiltInRegistries.ENCHANTMENT, enchant.id, NMSAiyatsbusEnchantment(enchant.id))
         return register(enchant)
     }
 
     override fun unregister(enchant: AiyatsbusEnchantment) {
-
     }
 }

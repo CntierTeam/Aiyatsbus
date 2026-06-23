@@ -15,6 +15,8 @@ import cc.polarastrum.aiyatsbus.core.script.AiyatsbusScriptHandler
  */
 interface AiyatsbusAPI {
 
+    fun getArtifactHandler(): AiyatsbusArtifactHandler
+
     /**
      * 获取附魔展示管理器
      *
