@@ -11,6 +11,6 @@
 
 更多信息，请访问 [YourKit 官方网站](https://www.yourkit.com/).
 
-![CNTier Logo](https://github.com/CntierTeam/Aiyatsbus/cntier.png)
+![CNTier Logo](https://github.com/CntierTeam/Aiyatsbus/blob/main/cntier.png)
 
 CNTier 2022 - 2026
